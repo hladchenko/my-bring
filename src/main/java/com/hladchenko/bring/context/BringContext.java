@@ -26,21 +26,22 @@ public class BringContext {
   }
 
   private static void addTypeToRegistry(Class<?> type) {
-    try {
-      Constructor<?> declaredConstructor = type.getDeclaredConstructors()[0];
-      Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
-      Object[] parameters = new Object[parameterTypes.length];
-      int index = 0;
-      for (Class<?> clazz : parameterTypes) {
-        if (!registry.containsKey(clazz)) {
-          addTypeToRegistry(clazz);
+    if (!registry.containsKey(type)) {
+      try {
+        Constructor<?> declaredConstructor = type.getDeclaredConstructors()[0];
+        Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
+        Object[] parameters = new Object[parameterTypes.length];
+        int index = 0;
+        for (Class<?> clazz : parameterTypes) {
+          if (!registry.containsKey(clazz)) {
+            addTypeToRegistry(clazz);
+          }
+          parameters[index++] = registry.get(clazz);
         }
-        parameters[index++] = registry.get(clazz);
+        registry.put(type, declaredConstructor.newInstance(parameters));
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        throw new RuntimeException(e);
       }
-
-      registry.put(type, declaredConstructor.newInstance(parameters));
-    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
     }
   }
 
